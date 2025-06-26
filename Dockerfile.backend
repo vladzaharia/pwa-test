@@ -1,0 +1,37 @@
+# Backend Dockerfile - Node.js API server
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nodejs
+
+# Copy package files
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn ./.yarn
+COPY packages/server/package.json ./packages/server/
+
+# Install dependencies
+RUN yarn install --immutable
+
+# Copy server source
+COPY --chown=nodejs:nodejs packages/server ./packages/server
+
+# Install only production dependencies
+RUN yarn workspaces focus server --production
+
+USER nodejs
+
+# Environment variables
+ENV NODE_ENV=production
+ENV PORT=3001
+ENV FRONTEND_URL=http://frontend
+ENV CORS_ORIGIN=http://frontend
+
+EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+CMD ["node", "packages/server/server.js"]

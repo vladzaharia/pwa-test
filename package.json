@@ -1,4 +1,24 @@
 {
   "name": "pwa-test",
-  "packageManager": "yarn@4.9.2"
+  "version": "1.0.0",
+  "type": "module",
+  "packageManager": "yarn@4.9.2",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn workspace server dev\" \"yarn workspace frontend dev\"",
+    "build": "yarn workspaces foreach -A run build",
+    "start": "concurrently \"yarn workspace server start\" \"yarn workspace frontend start\"",
+    "test": "yarn workspaces foreach -A run test",
+    "lint": "yarn workspaces foreach -A run lint:fix",
+    "format": "yarn workspaces foreach -A run format",
+    "clean": "yarn workspaces foreach -A run clean",
+    "check": "yarn build && yarn format && yarn lint",
+    "deploy": "./deploy.sh"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
 }
