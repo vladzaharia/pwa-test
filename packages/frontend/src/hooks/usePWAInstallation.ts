@@ -89,12 +89,32 @@ export function usePWAInstallation() {
 
             if (hasManifest && hasServiceWorker && isSecure) {
               console.log('PWA criteria met, but beforeinstallprompt not fired')
-              // This might happen if the app was previously installed and uninstalled
+              // Force a check for installation capability
+              setCanInstall(true)
             }
           }
-        }, 3000)
+        }, 5000)
       })
     }
+
+    // Additional check for installation capability
+    const checkInstallCapability = () => {
+      const isChrome = navigator.userAgent.includes('Chrome')
+      const isEdge = navigator.userAgent.includes('Edg')
+      const isSecure = location.protocol === 'https:' || location.hostname === 'localhost'
+
+      if ((isChrome || isEdge) && isSecure && !isInstalled) {
+        // These browsers support PWA installation
+        setTimeout(() => {
+          if (!installPrompt) {
+            console.log('Forcing install capability for supported browser')
+            setCanInstall(true)
+          }
+        }, 2000)
+      }
+    }
+
+    checkInstallCapability()
 
     return () => {
       window.removeEventListener(

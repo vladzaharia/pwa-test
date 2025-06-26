@@ -127,3 +127,33 @@
 [data-mobile='true'] .flex.h-full.w-full.flex-col {
   background-color: hsl(var(--sidebar)) !important;
 }
+
+/* PWA Standalone Mode Styles */
+@media (display-mode: standalone) {
+  body {
+    /* Ensure full viewport usage in standalone mode */
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* Handle safe areas for devices with notches */
+  #root {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height */
+  }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    #root {
+      /* Fix for iOS Safari standalone mode */
+      min-height: -webkit-fill-available;
+    }
+  }
+}
