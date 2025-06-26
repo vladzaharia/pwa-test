@@ -26,6 +26,7 @@ interface UseStatusItemsProps {
   readonly isInstalled: boolean
   readonly installPrompt: BeforeInstallPromptEvent | null
   readonly onInstall: () => void
+  readonly onShowInstallInstructions: () => void
   readonly notificationsEnabled: boolean
   readonly onRequestNotifications: () => void
 }
@@ -47,6 +48,7 @@ export const useStatusItems = (
     isInstalled,
     installPrompt,
     onInstall,
+    onShowInstallInstructions,
     notificationsEnabled,
     onRequestNotifications,
   } = props
@@ -78,39 +80,67 @@ export const useStatusItems = (
   const featureStatusItems = useMemo((): readonly StatusItem[] => {
     const items: StatusItem[] = []
 
-    // Installation Status
-    if (!isInstalled && installPrompt) {
+    // Install PWA Status
+    if (isInstalled) {
+      // Already installed - success state
+      items.push({
+        id: 'installation',
+        icon: Smartphone,
+        label: 'Install PWA',
+        status: 'success',
+        tooltip: 'App is installed as PWA with app-like experience active',
+      })
+    } else if (installPrompt) {
       // Available to install - clickable warning state
       items.push({
         id: 'installation',
         icon: Smartphone,
-        label: 'Installation',
+        label: 'Install PWA',
         status: 'warning',
         tooltip:
           'This app can be installed on your device for a better experience. Click to install.',
         onClick: onInstall,
         disabled: false,
       })
-    } else if (isInstalled) {
-      // Already installed - success state
-      items.push({
-        id: 'installation',
-        icon: Smartphone,
-        label: 'Installation',
-        status: 'success',
-        tooltip: 'App is installed as PWA with app-like experience active',
-      })
     } else {
-      // Not available/supported - disabled state
-      items.push({
-        id: 'installation',
-        icon: Smartphone,
-        label: 'Installation',
-        status: 'info',
-        tooltip: 'Install prompt not available on this device/browser',
-        onClick: () => {}, // Dummy onClick to make it clickable type
-        disabled: true,
-      })
+      // Check if we're on HTTPS or localhost (required for PWA)
+      const isSecure =
+        location.protocol === 'https:' || location.hostname === 'localhost'
+      const hasServiceWorker = 'serviceWorker' in navigator
+
+      if (!isSecure) {
+        items.push({
+          id: 'installation',
+          icon: Smartphone,
+          label: 'Install PWA',
+          status: 'error',
+          tooltip:
+            'PWA installation requires HTTPS. This app needs to be served over HTTPS to be installable.',
+          disabled: true,
+        })
+      } else if (!hasServiceWorker) {
+        items.push({
+          id: 'installation',
+          icon: Smartphone,
+          label: 'Install PWA',
+          status: 'error',
+          tooltip:
+            'PWA installation requires Service Worker support. Your browser may not support PWAs.',
+          disabled: true,
+        })
+      } else {
+        // Criteria met but prompt not available - provide manual installation guidance
+        items.push({
+          id: 'installation',
+          icon: Smartphone,
+          label: 'Install PWA',
+          status: 'info',
+          tooltip:
+            'PWA installation available! Click for manual installation instructions. The automatic prompt may not be available due to browser settings or previous dismissal.',
+          onClick: onShowInstallInstructions,
+          disabled: false,
+        })
+      }
     }
 
     // Notifications Status
@@ -155,6 +185,7 @@ export const useStatusItems = (
     isInstalled,
     installPrompt,
     onInstall,
+    onShowInstallInstructions,
     notificationsEnabled,
     onRequestNotifications,
   ])

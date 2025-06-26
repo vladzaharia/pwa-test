@@ -3,12 +3,14 @@
  * Refactored to use componentized approach following 2025 TypeScript best practices
  */
 
+import { useState } from 'react'
 import { ScrollArea } from './ui/scroll-area'
 import { Separator } from './ui/separator'
 import { Clock, Zap, Server } from 'lucide-react'
 import { StatusIndicator, StatusSection, SyncHistory } from './status'
 import { useStatusItems, parseSyncActions } from '../hooks/useStatusItems'
 import { formatLoadTime, formatLoadTimeTooltip } from '../lib/format-utils'
+import { PWAInstallDrawer } from './PWAInstallDrawer'
 import type { BeforeInstallPromptEvent } from '../types'
 
 interface PWAStatusSidebarProps {
@@ -46,6 +48,9 @@ export function PWAStatusSidebar({
   requestNotifications,
   backgroundSyncDemo,
 }: PWAStatusSidebarProps) {
+  // Drawer state for installation instructions
+  const [showInstallDrawer, setShowInstallDrawer] = useState(false)
+
   // Use the status items hook to get organized status data
   const { coreStatusItems, featureStatusItems, updateStatusItem } =
     useStatusItems({
@@ -56,6 +61,7 @@ export function PWAStatusSidebar({
       isInstalled,
       installPrompt,
       onInstall: handleInstall,
+      onShowInstallInstructions: () => setShowInstallDrawer(true),
       notificationsEnabled,
       onRequestNotifications: requestNotifications,
     })
@@ -163,6 +169,12 @@ export function PWAStatusSidebar({
           </StatusSection>
         </div>
       </div>
+
+      {/* Installation Instructions Drawer */}
+      <PWAInstallDrawer
+        open={showInstallDrawer}
+        onOpenChange={setShowInstallDrawer}
+      />
     </ScrollArea>
   )
 }

@@ -32,30 +32,40 @@ export default defineConfig({
         lang: 'en-US',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'icon.svg',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any',
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icon.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any',
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icon.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'maskable',
+          },
+          {
+            src: 'icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any',
           },
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Ensure service worker can handle navigation requests
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/api/],
       },
       devOptions: {
         enabled: true,
+        type: 'module',
       },
     }),
   ],
