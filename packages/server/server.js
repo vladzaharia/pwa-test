@@ -12,6 +12,8 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || FRONTEND_URL
 
 // Log startup info
 console.log(`🚀 PWA Demo Server starting in ${NODE_ENV} mode`)
+console.log(`🌐 CORS_ORIGIN: ${CORS_ORIGIN}`)
+console.log(`📂 FRONTEND_URL: ${FRONTEND_URL}`)
 
 // Middleware
 app.use(
@@ -21,6 +23,19 @@ app.use(
   })
 )
 app.use(express.json())
+
+// Debug logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`)
+  next()
+})
+
+// Serve static files from frontend build (in production)
+if (NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../frontend/dist')
+  app.use(express.static(frontendPath))
+  console.log(`📁 Serving static files from: ${frontendPath}`)
+}
 
 // In-memory storage for todos
 let todos = [
@@ -127,17 +142,17 @@ app.get('/api/health', (req, res) => {
   })
 })
 
-// Serve static files from the dist directory (for production)
-app.use(express.static('dist'))
-
-// Catch-all handler for SPA routing
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api')) {
-    res.status(404).json({ error: 'API endpoint not found' })
-  } else {
-    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'))
-  }
-})
+// Catch-all handler for SPA routing (must be last)
+if (NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api')) {
+      res.status(404).json({ error: 'API endpoint not found' })
+    } else {
+      const frontendPath = path.join(__dirname, '../frontend/dist')
+      res.sendFile(path.join(frontendPath, 'index.html'))
+    }
+  })
+}
 
 app.listen(PORT, () => {
   console.log(`🚀 PWA Demo Server running on port ${PORT}`)

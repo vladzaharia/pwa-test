@@ -1,4 +1,4 @@
-# Backend Dockerfile - Optimized for Yarn workspaces
+# Single-container Dockerfile - Backend serves both API and frontend
 FROM node:20-alpine
 
 WORKDIR /app
@@ -21,17 +21,23 @@ COPY --chown=nodejs:nodejs .yarn ./.yarn
 COPY --chown=nodejs:nodejs packages/server/package.json ./packages/server/
 COPY --chown=nodejs:nodejs packages/frontend/package.json ./packages/frontend/
 
-# Install dependencies as nodejs user (this layer is cached unless package files change)
+# Install dependencies (this layer is cached unless package files change)
 RUN yarn install --immutable --network-timeout 300000
 
-# Copy server source code (this layer rebuilds when code changes)
+# Copy source code for both packages
+COPY --chown=nodejs:nodejs packages/frontend ./packages/frontend
 COPY --chown=nodejs:nodejs packages/server ./packages/server
+
+# Build frontend for production
+ARG VITE_API_URL=http://localhost:3001
+ENV VITE_API_URL=$VITE_API_URL
+RUN yarn workspace frontend build
 
 # Environment variables
 ENV NODE_ENV=production
 ENV PORT=3001
-ENV FRONTEND_URL=http://frontend
-ENV CORS_ORIGIN=http://frontend
+ENV FRONTEND_URL=http://localhost:3001
+ENV CORS_ORIGIN=http://localhost:3001
 
 EXPOSE 3001
 

@@ -1,22 +1,21 @@
-# Two-container PWA deployment
-version: '3.8'
+# Single-container PWA deployment
 
 services:
-  # Backend API service
-  backend:
+  # All-in-one PWA service (backend serves frontend)
+  pwa-app:
     build:
       context: .
-      dockerfile: Dockerfile.backend
-    container_name: pwa-backend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:${PORT:-3001}
+    container_name: pwa-app
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - FRONTEND_URL=http://localhost:3000
-      - CORS_ORIGIN=http://localhost:3000
+      - FRONTEND_URL=http://localhost:3001
+      - CORS_ORIGIN=http://localhost:3001
     ports:
-      - "${BACKEND_PORT:-3001}:3001"
-    networks:
-      - pwa-network
+      - "${PORT:-3001}:3001"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
@@ -24,30 +23,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  # Frontend service (nginx)
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-      args:
-        - VITE_API_URL=http://localhost:${BACKEND_PORT:-3001}
-    container_name: pwa-frontend
-    ports:
-      - "${FRONTEND_PORT:-3000}:80"
-    networks:
-      - pwa-network
-    depends_on:
-      backend:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-networks:
-  pwa-network:
-    driver: bridge
