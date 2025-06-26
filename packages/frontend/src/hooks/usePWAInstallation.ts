@@ -32,22 +32,58 @@ export function usePWAInstallation() {
     checkInstallStatus()
 
     // Debug: Log PWA installation criteria
-    const debugInstallCriteria = () => {
-      console.log('PWA Installation Debug:')
+    const debugInstallCriteria = async () => {
+      console.log('=== PWA Installation Debug ===')
+      console.log('- URL:', location.href)
+      console.log('- Protocol:', location.protocol)
+      console.log('- Hostname:', location.hostname)
       console.log(
-        '- HTTPS:',
+        '- HTTPS/Localhost:',
         location.protocol === 'https:' || location.hostname === 'localhost'
       )
-      console.log('- Service Worker:', 'serviceWorker' in navigator)
-      console.log(
-        '- Manifest:',
-        document.querySelector('link[rel="manifest"]') !== null
-      )
+      console.log('- Service Worker Support:', 'serviceWorker' in navigator)
+
+      // Check service worker registration
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.getRegistration()
+          console.log('- Service Worker Registered:', !!registration)
+          console.log('- Service Worker Active:', !!registration?.active)
+          console.log('- Service Worker Controlling:', !!navigator.serviceWorker.controller)
+        } catch (e) {
+          console.log('- Service Worker Error:', e)
+        }
+      }
+
+      // Check manifest
+      const manifestLink = document.querySelector('link[rel="manifest"]')
+      console.log('- Manifest Link:', !!manifestLink)
+      if (manifestLink) {
+        console.log('- Manifest URL:', manifestLink.getAttribute('href'))
+        try {
+          const response = await fetch(manifestLink.getAttribute('href')!)
+          const manifest = await response.json()
+          console.log('- Manifest Content:', manifest)
+          console.log('- Manifest Display:', manifest.display)
+          console.log('- Manifest Start URL:', manifest.start_url)
+          console.log('- Manifest Icons:', manifest.icons?.length || 0, 'icons')
+        } catch (e) {
+          console.log('- Manifest Fetch Error:', e)
+        }
+      }
+
       console.log(
         '- Display mode:',
         window.matchMedia('(display-mode: standalone)').matches
       )
       console.log('- User agent:', navigator.userAgent)
+      console.log('- Browser:', {
+        isChrome: navigator.userAgent.includes('Chrome') && !navigator.userAgent.includes('Edg'),
+        isEdge: navigator.userAgent.includes('Edg'),
+        isSafari: navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome'),
+        isFirefox: navigator.userAgent.includes('Firefox')
+      })
+      console.log('=== End PWA Debug ===')
     }
 
     debugInstallCriteria()
@@ -99,18 +135,25 @@ export function usePWAInstallation() {
 
     // Additional check for installation capability
     const checkInstallCapability = () => {
-      const isChrome = navigator.userAgent.includes('Chrome')
+      const isChrome = navigator.userAgent.includes('Chrome') && !navigator.userAgent.includes('Edg')
       const isEdge = navigator.userAgent.includes('Edg')
       const isSecure = location.protocol === 'https:' || location.hostname === 'localhost'
+
+      console.log('Install capability check:', { isChrome, isEdge, isSecure, isInstalled })
 
       if ((isChrome || isEdge) && isSecure && !isInstalled) {
         // These browsers support PWA installation
         setTimeout(() => {
           if (!installPrompt) {
-            console.log('Forcing install capability for supported browser')
+            console.log('beforeinstallprompt not fired, but browser supports PWA installation')
+            console.log('This could be due to:')
+            console.log('1. App was previously installed and uninstalled')
+            console.log('2. User previously dismissed the prompt')
+            console.log('3. Browser policy preventing automatic prompts')
+            console.log('4. Missing PWA requirements')
             setCanInstall(true)
           }
-        }, 2000)
+        }, 3000)
       }
     }
 
