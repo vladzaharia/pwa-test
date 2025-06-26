@@ -27,7 +27,7 @@ function App() {
   const isMobile = useIsMobile()
 
   // Custom hooks for PWA functionality
-  const { installPrompt, isInstalled, handleInstall } = usePWAInstallation()
+  const { installPrompt, isInstalled, handleInstall, forceInstall } = usePWAInstallation()
   const { isOnline } = useNetworkStatus()
   const { swRegistration, updateAvailable, handleUpdate } = useServiceWorker()
   const { notificationsEnabled, requestNotifications } = useNotifications()
@@ -88,6 +88,7 @@ function App() {
               isInstalled={isInstalled}
               installPrompt={installPrompt}
               handleInstall={handleInstall}
+              forceInstall={forceInstall}
               isOnline={isOnline}
               swRegistration={swRegistration}
               updateAvailable={updateAvailable}

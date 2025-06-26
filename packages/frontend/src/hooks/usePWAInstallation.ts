@@ -184,11 +184,23 @@ export function usePWAInstallation() {
         } else {
           console.log('User dismissed installation')
         }
+        return true // Indicate that we showed the native prompt
       } catch (error) {
         console.error('Error during installation:', error)
+        return false // Fall back to manual instructions
       }
     } else {
-      console.log('No install prompt available')
+      console.log('No install prompt available - will show manual instructions')
+      return false // Indicate that manual instructions should be shown
+    }
+  }
+
+  // Force trigger installation - tries native prompt first, then manual instructions
+  const forceInstall = async (showManualInstructions: () => void) => {
+    const nativePromptShown = await handleInstall()
+    if (!nativePromptShown) {
+      // If native prompt wasn't available or failed, show manual instructions
+      showManualInstructions()
     }
   }
 
@@ -197,5 +209,6 @@ export function usePWAInstallation() {
     isInstalled,
     canInstall,
     handleInstall,
+    forceInstall,
   }
 }

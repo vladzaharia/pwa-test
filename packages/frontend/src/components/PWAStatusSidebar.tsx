@@ -22,6 +22,7 @@ interface PWAStatusSidebarProps {
   readonly isInstalled: boolean
   readonly installPrompt: BeforeInstallPromptEvent | null
   readonly handleInstall: () => void
+  readonly forceInstall: (showManualInstructions: () => void) => Promise<void>
   readonly isOnline: boolean
   readonly swRegistration: ServiceWorkerRegistration | null
   readonly updateAvailable: boolean
@@ -39,7 +40,7 @@ export function PWAStatusSidebar({
   lastServerCheck,
   isInstalled,
   installPrompt,
-  handleInstall,
+  forceInstall,
   isOnline,
   swRegistration,
   updateAvailable,
@@ -60,7 +61,7 @@ export function PWAStatusSidebar({
       onUpdate: handleUpdate,
       isInstalled,
       installPrompt,
-      onInstall: handleInstall,
+      onInstall: () => forceInstall(() => setShowInstallDrawer(true)),
       onShowInstallInstructions: () => setShowInstallDrawer(true),
       notificationsEnabled,
       onRequestNotifications: requestNotifications,
